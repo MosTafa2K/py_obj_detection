@@ -34,19 +34,27 @@ def main(page: Page):
     page.update()
 
     def file_type_checker(file_path: str):
-        file_ext = os.path.abspath(file_path).split(".")[1]
+        file_ext = os.path.basename(file_path).split(".")[1]
         if file_ext == "mp4":
             return "Video"
 
         if file_ext in ["jpg", "jpeg", "png"]:
             return "Image"
 
-    def image_detection(event: Event):
-        show_message("Starting Image Detection...")
+    def start_detection(event: Event):
+        show_message(f"Starting {detect_menu.value} Detection...")
         filename = "".join(map(lambda f: f.name, file_dialog.result.files))
-        img_detect.detect_image(filename)
-        show_message(
-            f"Successfully Ended!...Output saved in: Out\{'result_'+filename}")
+
+        if file_type_checker(filename) == "Image":
+            img_detect.detect_image(filename)
+
+        elif file_type_checker(filename) == "Video":
+            if file_type_checker(filename) == "Video":
+                show_message("Starting Video Detection...")
+                vid_name = os.path.basename(filename).split(".")[0]
+                vid_detect.video_detection(vid_name)
+                show_message(
+                    f"Successfully Ended!...Output saved in: Out\{'result_'+vid_name}.avi")
 
     # For Upload Image
     def on_upload(event: FilePickerResultEvent):
@@ -70,14 +78,8 @@ def main(page: Page):
             upload_btn.disabled = True
             page.update()
 
-        if file_type_checker(result) == "Video":
-            show_message("Starting Video Detection...")
-            vid_name = os.path.basename(result).split(".")[0]
-            vid_detect.video_detection(vid_name)
-            show_message(
-                f"Successfully Ended!...Output saved in: Out\{'result_'+vid_name}.avi")
-
     # Delete Uploaded Image
+
     def clear_image(event: Event):
         if len(page.controls) > 1:
             page.remove_at(1)
@@ -114,7 +116,7 @@ def main(page: Page):
 
     # Start Detection Button
     detect_btn = ElevatedButton(
-        text="Start Detection", disabled=True, on_click=image_detection)
+        text="Start Detection", disabled=True, on_click=start_detection)
 
     upload_btn = ElevatedButton(text="Upload File", on_click=upload_image)
 
