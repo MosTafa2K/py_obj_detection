@@ -1,3 +1,5 @@
+import os
+import time
 import flet
 from flet import (
     Page,
@@ -31,6 +33,14 @@ def main(page: Page):
     page.window_center()
     page.update()
 
+    def file_type_checker(file_path: str):
+        file_ext = os.path.abspath(file_path).split(".")[1]
+        if file_ext == "mp4":
+            return "Video"
+
+        if file_ext in ["jpg", "jpeg", "png"]:
+            return "Image"
+
     def image_detection(event: Event):
         show_message("Starting Image Detection...")
         filename = "".join(map(lambda f: f.name, file_dialog.result.files))
@@ -42,22 +52,30 @@ def main(page: Page):
     def on_upload(event: FilePickerResultEvent):
         result = "".join(map(lambda file: file.path, event.files)
                          ) if event.files != None else "Cancelled!"
-        page.add(
-            Row(
-                expand=True,
-                wrap=False,
-                controls=[
-                    Image(
-                        src=result,
-                        expand=True
-                    )
-                ]
+        if file_type_checker(result) == "Image":
+            page.add(
+                Row(
+                    expand=True,
+                    wrap=False,
+                    controls=[
+                        Image(
+                            src=result,
+                            expand=True
+                        )
+                    ]
+                )
             )
-        )
-        detect_btn.disabled = False
-        clear_btn.disabled = False
-        upload_btn.disabled = True
-        page.update()
+            detect_btn.disabled = False
+            clear_btn.disabled = False
+            upload_btn.disabled = True
+            page.update()
+
+        if file_type_checker(result) == "Video":
+            show_message("Starting Video Detection...")
+            vid_name = os.path.basename(result).split(".")[0]
+            vid_detect.video_detection(vid_name)
+            show_message(
+                f"Successfully Ended!...Output saved in: Out\{'result_'+vid_name}.avi")
 
     # Delete Uploaded Image
     def clear_image(event: Event):
@@ -71,11 +89,6 @@ def main(page: Page):
     # Check if Image mode selected upload image otherwise show an alert
     def upload_image(event: Event):
         if detect_menu.value is None:
-            dlg.open = True
-            page.update()
-        elif detect_menu.value != "Image":
-            dlg.title = Text(
-                "Other modes not allowed for now..Please choose Image mode!")
             dlg.open = True
             page.update()
         else:
